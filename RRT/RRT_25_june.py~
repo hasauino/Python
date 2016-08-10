@@ -1,0 +1,128 @@
+#!/usr/bin/env python
+
+
+#--------Include modules---------------
+from copy import copy
+import rospy
+from visualization_msgs.msg import Marker
+from std_msgs.msg import String
+from geometry_msgs.msg import Point
+from os import system
+
+from random import random
+from numpy import array
+from numpy import concatenate
+from numpy import vstack
+
+from numpy import linalg as LA
+from functions import Nearest
+from functions import Steer
+import parameters as param
+from functions import ObstacleFree
+
+
+
+
+
+
+
+#-------------------------------RRT------
+def node():
+
+	x_init=array([2.5,2.5])
+	V=array([x_init])
+	i=1.0
+	E=concatenate((x_init,x_init))
+
+
+
+
+    	pub = rospy.Publisher('shapes', Marker, queue_size=10)
+    	rospy.init_node('plotter', anonymous=False)
+    	rate = rospy.Rate(20)
+   	
+	
+    	points=Marker()
+    	line=Marker()
+#Set the frame ID and timestamp.  See the TF tutorials for information on these.
+    	points.header.frame_id=line.header.frame_id="/map"
+    	points.header.stamp=line.header.stamp=rospy.Time.now()
+	
+    	points.ns=line.ns = "markers"
+    	points.id = 0
+    	line.id =1
+	
+    	points.type = Marker.POINTS
+    	line.type=Marker.LINE_LIST
+#Set the marker action.  Options are ADD, DELETE, and new in ROS Indigo: 3 (DELETEALL)
+    	points.action = line.action = Marker.ADD;
+	
+    	points.pose.orientation.w = line.pose.orientation.w = 1.0;
+	
+    	line.scale.x = 0.02;
+    	points.scale.x=0.02; 
+    	line.scale.y= 0.02;
+    	points.scale.y=0.02; 
+	
+    	line.color.r = 1.0;
+    	points.color.g = 1.0;
+   	
+    	points.color.a=line.color.a = 1.0;
+    	points.lifetime =line.lifetime = rospy.Duration();
+
+    	p=Point()
+    	p.x = x_init[0] ;
+    	p.y = x_init[0] ;
+    	p.z = 0;
+
+    	pp=[]
+        pl=[]
+    	pp.append(copy(p))
+	
+       
+
+
+	while not rospy.is_shutdown():
+# Sample free
+	  x_rand = array([param.dim*random(),param.dim*random()])
+ 
+# Nearest
+	  x_nearest=V[Nearest(V,x_rand),:]
+
+# Steer
+	  x_new=Steer(x_nearest,x_rand,param.eta)
+
+# ObstacleFree
+	  mapsub=1
+	  if ObstacleFree(x_nearest,x_new,mapsub,param.steps):
+	 	V=concatenate((V,array([x_new])), axis=0)
+	        temp=concatenate((x_nearest,x_new))
+	        E=vstack((E,temp))
+
+        	p.x=x_nearest[0] 
+        	p.y=x_nearest[1]
+                pl.append(copy(p)) 
+		 
+        	p.x=x_new[0] 
+        	p.y=x_new[1]
+		pp.append(copy(p))
+                pl.append(copy(p)) 
+		points.points=pp
+        	line.points=pl
+	   	pub.publish(points)
+        	pub.publish(line)
+        	rate.sleep()
+
+
+
+#_____________________________________________________________________________
+
+if __name__ == '__main__':
+    try:
+        node()
+    except rospy.ROSInterruptException:
+        pass
+ 
+ 
+ 
+ 

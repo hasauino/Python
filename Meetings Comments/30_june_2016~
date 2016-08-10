@@ -1,0 +1,9 @@
+1- make eta variable, such that exploration is fast at the beginning and then slow after it has explored large portion of the mao in order to increase map quality
+
+2-if point is visted try not to visit it neighborhood that is colse to it
+
+
+3- in obstackle free function, gridcheck function, dont reject -1 points (unknown points)
+
+4- compare with others interms of map quality+time+cost
+

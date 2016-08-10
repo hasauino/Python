@@ -1,0 +1,45 @@
+
+from numpy import array
+from scipy.optimize import minimize
+from numpy.linalg import norm
+
+class Steer:
+ 	p=[]
+ 	xnew=[]
+	def __init__(self,xnearest,xrand,eta):
+		self.xnearest=xnearest
+		self.xrand=xrand
+		self.eta=eta
+		
+		Steer.p.append(  [self.xnearest,self.xrand,self.eta] )
+	         		 
+         	def myfun(x,p):
+         		x1=p[1]
+   			X=array([x[0],x[1]])
+   			return norm(X-x1)
+   			
+         	def consFun(x):
+   		
+			X=array([x[0],x[1]])
+			x0=Steer.p[0]
+			eta=Steer.p[2]
+			return -norm(X-x0)+eta	
+				
+		cons = ({'type': 'ineq',
+         		 'fun' : Steer.consFun  })
+         	
+         	res = minimize(myfun,[0.,0.],args=Steer.p,constraints=cons, method='COBYLA',options={'disp': True})
+ 		x_new=array([res.x[0],res.x[1]])
+ 		Steer.xnew.append(x_new)
+
+		
+   		
+   	def consFun(x):
+   		
+		X=array([x[0],x[1]])
+		x0=Steer.p[0]
+		eta=Steer.p[2]
+		return -norm(X-x0)+eta	
+
+
+
